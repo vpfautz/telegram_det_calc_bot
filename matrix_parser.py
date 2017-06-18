@@ -1,11 +1,29 @@
 import re
 import json
+import re
+import math
 
+
+def parse_element(s):
+	s = s.strip()
+	if s.lower() == "pi":
+		return math.pi
+
+	frac = re.search("^(\d+)/(\d+)$", s)
+	if not frac is None:
+		return float(frac.group(1)) / float(frac.group(2))
+
+	try:
+		return float(s)
+	except Exception as e:
+		print "Can't parse element: '%s'" % s
+
+elem_reg = "(\d+\.\d+|\d+|\d+/\d+|pi)"
 
 def parse_matrix_std(text, colsep, rowsep):
-	rowreg = "\s*\d+(\s*%s\s*\d+)*\s*" % colsep
+	rowreg = "\s*%s+(\s*%s\s*%s+)*\s*" % (elem_reg, colsep, elem_reg)
 	reg = "^%s(%s%s)*$" % (rowreg, rowsep, rowreg)
-	a = re.search(reg, text, re.DOTALL)
+	a = re.search(reg, text, re.DOTALL|re.IGNORECASE)
 	if a is None:
 		return None
 
@@ -17,7 +35,7 @@ def parse_matrix_std(text, colsep, rowsep):
 	while "  " in text:
 		text = text.replace("  ", " ")
 
-	return map(lambda x:map(lambda y:int(y.strip()), x.strip().split(colsep)), text.split(rowsep))
+	return map(lambda x:map(parse_element, x.strip().split(colsep)), text.split(rowsep))
 
 def parse_matrix_std_brute(text):
 	seperators = [" ", "\n", "\t", ",", ";"]
@@ -56,7 +74,8 @@ def parse_matrix_std_brute(text):
 	# return map(lambda x:map(lambda y:int(y.strip()), x.strip().split(" ")), text.split(","))
 
 def parse_matrix_brackets(text):
-	a = re.search("^\s*\[\s*\d+(\s*,\s*\d+)*\s*\](\s*,\s*\[\s*\d+(\s*,\s*\d+)*\s*\])*\s*$", text, re.DOTALL)
+	row_reg = "\s*\[\s*%s+(\s*,\s*%s+)*\s*\]\s*" % (elem_reg, elem_reg)
+	a = re.search("^%s(,%s)*$" % (row_reg, row_reg), text, re.DOTALL|re.IGNORECASE)
 	if a is None:
 		text = text.strip()
 		if text[0] == "[" and text[-1] == "]":
@@ -64,8 +83,13 @@ def parse_matrix_brackets(text):
 		else:
 			return None
 
-	text = text.strip().replace(" ", "")
-	return json.loads("[%s]" % text)
+	text = text.strip().replace(" ", "").replace("\n", "")
+	text = text.replace("\r", "").replace("\t", "")
+
+	rowsep = "],["
+	colsep = ","
+	text = text[1:-1]
+	return map(lambda x:map(parse_element, x.strip().split(colsep)), text.split(rowsep))
 
 def parseMatrix(text):
 	ops = [
@@ -143,6 +167,17 @@ def test():
 	assert(parseMatrix("1 2;3 4") == [[1,2],[3,4]])
 	assert(parseMatrix("1,2 3,4") == [[1,2],[3,4]])
 	assert(parseMatrix("1,2;3,4") == [[1,2],[3,4]])
+
+
+	a = "1/2 2,pi 4"
+	assert(parseMatrix(a) == [[0.5,2],[math.pi,4]])
+	a = "[1/2,2],[pi,4]"
+	assert(parse_matrix_brackets(a) == [[0.5,2],[math.pi,4]])
+
+	assert(parse_element("1") == 1)
+	assert(parse_element("1.5") == 1.5)
+	assert(parse_element("1/2") == .5)
+	assert(parse_element("pi") == math.pi)
 
 
 if __name__ == '__main__':
