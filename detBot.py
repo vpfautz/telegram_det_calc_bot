@@ -15,6 +15,10 @@ def handle(msg):
 	chat_id = msg["chat"]["id"]
 	text = msg["text"]
 
+	if text == "/start":
+		bot.sendMessage(chat_id, "Give me some Matrix and I calculate the determinante. For example:\n1 2\n3 4\n will return 2.0. You also could use the Format '1 2,3 4' and many more :)")
+		return
+
 	matrix = parseMatrix(text)
 	if matrix is None:
 		bot.sendMessage(chat_id, "Can't parse matrix, please use a different format!")
