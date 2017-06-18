@@ -15,6 +15,8 @@ def handle(msg):
 	chat_id = msg["chat"]["id"]
 	text = msg["text"]
 
+	print "%s: %s" % (msg["from"]["first_name"], text)
+
 	if text == "/start":
 		bot.sendMessage(chat_id, "Give me some Matrix and I calculate the determinante. For example:\n1 2\n3 4\nwill return -2.0. You also could use the Format '1 2,3 4' and many more :)")
 		return
@@ -32,7 +34,9 @@ def handle(msg):
 		bot.sendMessage(chat_id, "Matrix have to be at least 2x2!")
 		return
 
-	print matrix
+	if len(matrix) != len(matrix[0]):
+		bot.sendMessage(chat_id, "The two dimensions of the matrix must be equal!")
+		return
 
 	# calculate determinante
 	a = np.array(matrix)
