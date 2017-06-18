@@ -12,9 +12,10 @@ There are multiple supported formats.
 
 # Requirements
 
-You need `python2.7` with `numpy`.
+You need `python2.7`.
 
 ```
 pip2 install telepot
+pip2 install numpy
+pip2 install sympy
 ```
-
