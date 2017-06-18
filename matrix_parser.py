@@ -6,6 +6,16 @@ import sympy
 
 elem_reg = "-?(?:\d+\.\d+|\d+|\d+/\d+|pi|[a-zA-Z]+)"
 
+"""
+Parse one Matrix entry.
+Supported:
+- Integers (123)
+- Floats (0.5)
+- Fraction (1/2)
+- Pi (pi)
+- Variables (x, somevar)
+- and all negativ (-1/2)
+"""
 def parse_element(s):
 	s = s.strip()
 	if s.startswith("-"):
@@ -59,31 +69,6 @@ def parse_matrix_std_brute(text):
 			if not r is None and check_dim(r):
 				return r
 
-
-# def parse_matrix_space_nl(text):
-# 	return parse_matrix_std(text, " ", "\n")
-	# a = re.search("^\s*\d+( +\d+ *)*(\n\s*\d+( +\d+)* *)*\s*$", text, re.DOTALL)
-	# if a is None:
-	# 	return None
-
-	# text = text.strip()
-	# while "  " in text:
-	# 	text = text.replace("  ", " ")
-
-	# return map(lambda x:map(lambda y:int(y.strip()), x.strip().split(" ")), text.split("\n"))
-
-# def parse_matrix_space_coma(text):
-# 	return parse_matrix_std(text, " ", ",")
-	# a = re.search("^ *\d+( +\d+ *)*(, *\d+( +\d+)* *)* *$", text, re.DOTALL)
-	# if a is None:
-	# 	return None
-
-	# text = text.strip()
-	# while "  " in text:
-	# 	text = text.replace("  ", " ")
-
-	# return map(lambda x:map(lambda y:int(y.strip()), x.strip().split(" ")), text.split(","))
-
 def parse_matrix_brackets(text):
 	row_reg = "\s*\[\s*%s+(\s*,\s*%s+)*\s*\]\s*" % (elem_reg, elem_reg)
 	a = re.search("^%s(,%s)*$" % (row_reg, row_reg), text, re.DOTALL|re.IGNORECASE)
@@ -102,6 +87,7 @@ def parse_matrix_brackets(text):
 	text = text[1:-1]
 	return map(lambda x:map(parse_element, x.strip().split(colsep)), text.split(rowsep))
 
+# Parse a matrix from given string. Matrix is 2D.
 def parseMatrix(text):
 	ops = [
 		parse_matrix_brackets,
@@ -113,6 +99,7 @@ def parseMatrix(text):
 		if not r is None:
 			return r
 
+# Check if in 2D Array all rows have the same length.
 def check_dim(m):
 	first_length = len(m[0])
 	for l in m:
@@ -121,7 +108,7 @@ def check_dim(m):
 
 	return True
 
-
+# Some testcases to test functionality.
 def test():
 	a = """1 2
 	3 4"""
