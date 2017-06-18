@@ -13,6 +13,10 @@ calculate the determinante of a given matrix.
 
 def handle(msg):
 	chat_id = msg["chat"]["id"]
+	if not "text" in msg:
+		bot.sendMessage(chat_id, "I only understand text at the moment :(")
+		return
+
 	text = msg["text"]
 
 	print "%s: %s" % (msg["from"]["first_name"], text)
