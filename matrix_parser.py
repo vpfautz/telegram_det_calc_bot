@@ -1,24 +1,35 @@
 import re
 import json
 import re
-import math
+import sympy
 
+
+elem_reg = "-?(?:\d+\.\d+|\d+|\d+/\d+|pi|[a-zA-Z]+)"
 
 def parse_element(s):
 	s = s.strip()
+	if s.startswith("-"):
+		return -parse_element(s[1:])
 	if s.lower() == "pi":
-		return math.pi
+		return sympy.pi
 
-	frac = re.search("^(\d+)/(\d+)$", s)
+	sym = re.search("^([a-zA-Z]+)$", s)
+	if not sym is None:
+		return sympy.Symbol(sym.group(1))
+
+	frac = re.search("^(%s)/(%s)$" % (elem_reg, elem_reg), s)
 	if not frac is None:
-		return float(frac.group(1)) / float(frac.group(2))
+		return sympy.Rational(parse_element(frac.group(1)), parse_element(frac.group(2)))
+
+	sym = re.search("^(\d+)$", s)
+	if not sym is None:
+		return int(sym.group(1))
 
 	try:
-		return float(s)
+		return sympy.Rational(s)
 	except Exception as e:
 		print "Can't parse element: '%s'" % s
 
-elem_reg = "(\d+\.\d+|\d+|\d+/\d+|pi)"
 
 def parse_matrix_std(text, colsep, rowsep):
 	rowreg = "\s*%s+(\s*%s\s*%s+)*\s*" % (elem_reg, colsep, elem_reg)
@@ -169,16 +180,25 @@ def test():
 	assert(parseMatrix("1,2;3,4") == [[1,2],[3,4]])
 
 
-	a = "1/2 2,pi 4"
-	assert(parseMatrix(a) == [[0.5,2],[math.pi,4]])
-	a = "[1/2,2],[pi,4]"
-	assert(parse_matrix_brackets(a) == [[0.5,2],[math.pi,4]])
-
 	assert(parse_element("1") == 1)
 	assert(parse_element("1.5") == 1.5)
 	assert(parse_element("1/2") == .5)
-	assert(parse_element("pi") == math.pi)
+	assert(parse_element("pi") == sympy.pi)
+	assert(parse_element("x") == sympy.Symbol("x"))
+	assert(parse_element("-1") == -1)
+	assert(parse_element("-1.5") == -1.5)
+	assert(parse_element("-1/2") == -.5)
+	assert(parse_element("-pi") == -sympy.pi)
+	assert(parse_element("-x") == -sympy.Symbol("x"))
 
+	a = "1/2 2,pi 4"
+	assert(parseMatrix(a) == [[0.5,2],[sympy.pi,4]])
+	a = "1/2 -x,pi -4"
+	assert(parseMatrix(a) == [[0.5,-sympy.Symbol("x")],[sympy.pi,-4]])
+	a = "[1/2,2],[pi,4]"
+	assert(parse_matrix_brackets(a) == [[0.5,2],[sympy.pi,4]])
+	a = "[1/2,0.5],[pi,x]"
+	assert(parse_matrix_brackets(a) == [[0.5,0.5],[sympy.pi,sympy.Symbol("x")]])
 
 if __name__ == '__main__':
 	test()

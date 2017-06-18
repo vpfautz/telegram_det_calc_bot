@@ -4,11 +4,24 @@ import time
 import numpy as np
 from matrix_parser import parseMatrix,check_dim
 import sys
+import sympy
+from sympy.matrices import Matrix
 
 """
 $ python detBot.py <token>
 
 calculate the determinante of a given matrix.
+"""
+
+start_message = """Give me some Matrix and I calculate the determinante. For example:
+1 2
+3 4
+will return -2.0. You also could use the Format '1 2,3 4' and many more :)
+Another example:
+1/2 2.5 3
+-3  3   pi
+x   3   -x
+returns:  -18*x + 5*pi*x/2 - 27 - 3*pi/2
 """
 
 def handle(msg):
@@ -22,7 +35,7 @@ def handle(msg):
 	print "%s: %s" % (msg["from"]["first_name"], text)
 
 	if text == "/start":
-		bot.sendMessage(chat_id, "Give me some Matrix and I calculate the determinante. For example:\n1 2\n3 4\nwill return -2.0. You also could use the Format '1 2,3 4' and many more :)")
+		bot.sendMessage(chat_id, start_message)
 		return
 
 	matrix = parseMatrix(text)
@@ -43,10 +56,12 @@ def handle(msg):
 		return
 
 	# calculate determinante
-	a = np.array(matrix)
-	det = round(np.linalg.det(a), 4)
-
-	bot.sendMessage(chat_id, 'determinante: %s' % det)
+	m = Matrix(matrix)
+	det = m.det()
+	if len(det.free_symbols) > 0:
+		bot.sendMessage(chat_id, 'determinante: %s' % det)
+	else:
+		bot.sendMessage(chat_id, 'determinante: %s = %s' % (det, det.evalf(4)))
 
 
 TOKEN = sys.argv[1]
